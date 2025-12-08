@@ -312,4 +312,152 @@ class _MedidasScreenState extends State<MedidasScreen> {
                         itemCount: filteredMedidas.length,
                         itemBuilder: (context, index) {
                           final medida = filteredMedidas[index];
-                         
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            elevation: 3,
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.all(16),
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.green.shade100,
+                                child: Icon(
+                                  _getCategoriaIcon(medida['categoria']),
+                                  color: Colors.green,
+                                ),
+                              ),
+                              title: Text(
+                                medida['titulo'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 8),
+                                  Text(medida['descripcion']),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Chip(
+                                        label: Text(medida['categoria']),
+                                        backgroundColor: Colors.green.shade50,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Chip(
+                                        label: Text('Impacto: ${medida['impacto']}'),
+                                        backgroundColor:
+                                            _getImpactColor(medida['impacto'])
+                                                .withOpacity(0.2),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              trailing: const Icon(Icons.arrow_forward_ios),
+                              onTap: () => _verDetalleMedida(medida),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          _mostrarMedidasCompletadas();
+        },
+        backgroundColor: Colors.green,
+        icon: const Icon(Icons.check_circle),
+        label: const Text('Mis Logros'),
+      ),
+    );
+  }
+
+  Widget _buildStat(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+      ],
+    );
+  }
+
+  IconData _getCategoriaIcon(String categoria) {
+    switch (categoria.toLowerCase()) {
+      case 'agua':
+        return Icons.water_drop;
+      case 'energía':
+        return Icons.bolt;
+      case 'residuos':
+        return Icons.delete;
+      case 'transporte':
+        return Icons.directions_bike;
+      case 'consumo':
+        return Icons.shopping_cart;
+      case 'jardinería':
+        return Icons.yard;
+      default:
+        return Icons.eco;
+    }
+  }
+
+  void _mostrarMedidasCompletadas() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Mis Logros Ambientales'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              const ListTile(
+                leading: Icon(Icons.check_circle, color: Colors.green),
+                title: Text('Medidas Completadas'),
+                subtitle: Text('0 de 15 medidas'),
+                trailing: Text('0%'),
+              ),
+              const Divider(),
+              const Text(
+                'Próximos desafíos:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              _buildChallenge('Completar 5 medidas', '0/5'),
+              _buildChallenge('Ahorrar 1000L de agua', 'En progreso'),
+              _buildChallenge('Reducir 50kg de CO2', 'Pendiente'),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChallenge(String title, String status) {
+    return ListTile(
+      leading: const Icon(Icons.flag, color: Colors.orange),
+      title: Text(title),
+      trailing: Text(
+        status,
+        style: TextStyle(
+          color: status == 'Pendiente' ? Colors.red : Colors.green,
+        ),
+      ),
+    );
+  }
+}

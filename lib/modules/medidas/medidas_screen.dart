@@ -75,7 +75,7 @@ class _MedidasScreenState extends State<MedidasScreen> {
           ''',
           'impacto': 'Alto',
           'dificultad': 'Media',
-          'ahorro_anual': 'RD$ 5,000',
+          'ahorro_anual': 'RD 5,000',
         },
       ];
     }

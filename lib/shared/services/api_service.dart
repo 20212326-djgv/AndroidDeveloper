@@ -7,36 +7,71 @@ class ApiService {
   
   Future<Map<String, dynamic>> get(String endpoint) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl$endpoint'));
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('Error en la petición: ${response.statusCode}');
-      }
+      final response = await http.get(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: await _getHeaders(),
+      );
+      
+      return _handleResponse(response);
     } catch (e) {
-      throw Exception('Error de conexión: $e');
+      return {
+        'exito': false,
+        'mensaje': 'Error de conexión: $e',
+      };
     }
   }
-
+  
   Future<Map<String, dynamic>> post(String endpoint, Map<String, dynamic> data) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl$endpoint'),
-        headers: {'Content-Type': 'application/json'},
+        headers: await _getHeaders(),
         body: json.encode(data),
       );
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('Error en la petición: ${response.statusCode}');
-      }
+      
+      return _handleResponse(response);
     } catch (e) {
-      throw Exception('Error de conexión: $e');
+      return {
+        'exito': false,
+        'mensaje': 'Error de conexión: $e',
+      };
     }
   }
-
-  Future<String?> getToken() async {
+  
+  Future<Map<String, String>> _getHeaders() async {
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    final token = await _getToken();
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    
+    return headers;
+  }
+  
+  Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
+  }
+  
+  Map<String, dynamic> _handleResponse(http.Response response) {
+    if (response.statusCode == 200) {
+      try {
+        return json.decode(response.body);
+      } catch (e) {
+        return {
+          'exito': false,
+          'mensaje': 'Error al procesar la respuesta',
+        };
+      }
+    } else {
+      return {
+        'exito': false,
+        'mensaje': 'Error ${response.statusCode}: ${response.reasonPhrase}',
+      };
+    }
   }
 }

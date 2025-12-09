@@ -141,7 +141,7 @@ class _ServiciosScreenState extends State<ServiciosScreen> {
                               servicio['descripcion'],
                               style: const TextStyle(
                                 fontSize: 16,
-                                color: Colors.grey[700],
+                                color: Colors.grey,
                               ),
                             ),
                             const SizedBox(height: 16),

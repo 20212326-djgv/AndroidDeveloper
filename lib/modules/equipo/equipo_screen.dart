@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:medioambiente_rd/shared/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,11 +13,12 @@ class _EquipoScreenState extends State<EquipoScreen> {
   List<Map<String, dynamic>> equipo = [];
   bool _isLoading = true;
   String _selectedDepartamento = 'Todos';
-  final Map<String, List<Map<String, dynamic>>> _equipoPorDepartamento = {};
+  late Map<String, List<Map<String, dynamic>>> _equipoPorDepartamento;
 
   @override
   void initState() {
     super.initState();
+    _equipoPorDepartamento = {}; // Inicializar aquí
     _cargarEquipo();
   }
 
@@ -34,7 +34,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
         final Map<String, List<Map<String, dynamic>>> equiposPorDepto = {};
         
         for (var persona in datos) {
-          final depto = persona['departamento'] ?? 'Sin Departamento';
+          final depto = persona['departamento']?.toString() ?? 'Sin Departamento';
           if (!equiposPorDepto.containsKey(depto)) {
             equiposPorDepto[depto] = [];
           }
@@ -43,7 +43,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
         
         setState(() {
           equipo = datos;
-          _equipoPorDepartamento.addAll(equiposPorDepto);
+          _equipoPorDepartamento = equiposPorDepto; // Asignar directamente
           _isLoading = false;
         });
       }
@@ -61,7 +61,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
           'email': 'ministro@medioambiente.gob.do',
           'telefono': '809-567-4301',
           'foto': 'https://adamix.net/medioambiente/imagenes/ministro.jpg',
-          'biografia': 'Economista y político dominicano...',
+          'biografia': 'Economista y político dominicano con amplia experiencia en políticas ambientales.',
           'redes_sociales': {
             'twitter': '@mceara',
             'linkedin': 'mceara'
@@ -75,7 +75,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
           'email': 'vice@medioambiente.gob.do',
           'telefono': '809-567-4302',
           'foto': 'https://adamix.net/medioambiente/imagenes/viceministra.jpg',
-          'biografia': 'Especialista en gestión ambiental...',
+          'biografia': 'Especialista en gestión ambiental con más de 15 años de experiencia.',
           'redes_sociales': {
             'twitter': '@maliciaurban',
             'linkedin': 'maliciaurban'
@@ -85,7 +85,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
       
       final Map<String, List<Map<String, dynamic>>> equiposPorDepto = {};
       for (var persona in datosEjemplo) {
-        final depto = persona['departamento'] ?? 'Sin Departamento';
+        final depto = persona['departamento']?.toString() ?? 'Sin Departamento';
         if (!equiposPorDepto.containsKey(depto)) {
           equiposPorDepto[depto] = [];
         }
@@ -94,7 +94,8 @@ class _EquipoScreenState extends State<EquipoScreen> {
       
       setState(() {
         equipo = datosEjemplo;
-        _equipoPorDepartamento.addAll(equiposPorDepto);
+        _equipoPorDepartamento = equiposPorDepto; // Asignar directamente
+        _isLoading = false;
       });
     }
   }
@@ -128,17 +129,32 @@ class _EquipoScreenState extends State<EquipoScreen> {
                 // Foto y nombre
                 CircleAvatar(
                   radius: 60,
-                  backgroundImage: CachedNetworkImageProvider(
-                    persona['foto'] ?? '',
-                  ),
                   backgroundColor: Colors.grey[200],
-                  child: persona['foto'] == null
-                      ? const Icon(Icons.person, size: 60, color: Colors.grey)
-                      : null,
+                  child: persona['foto'] != null && persona['foto'].toString().isNotEmpty
+                      ? ClipOval(
+                          child: Image.network(
+                            persona['foto'].toString(),
+                            width: 120,
+                            height: 120,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(
+                                Icons.person,
+                                size: 60,
+                                color: Colors.grey,
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const CircularProgressIndicator();
+                            },
+                          ),
+                        )
+                      : const Icon(Icons.person, size: 60, color: Colors.grey),
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  persona['nombre'],
+                  persona['nombre']?.toString() ?? 'Nombre no disponible',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -147,18 +163,19 @@ class _EquipoScreenState extends State<EquipoScreen> {
                 ),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(persona['cargo']),
+                  label: Text(persona['cargo']?.toString() ?? 'Cargo no disponible'),
                   backgroundColor: Colors.green.shade100,
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  persona['departamento'],
+                  persona['departamento']?.toString() ?? 'Sin departamento',
                   style: const TextStyle(
                     fontSize: 16,
                     color: Colors.grey,
                   ),
                 ),
                 const SizedBox(height: 25),
+                
                 // Información de contacto
                 Card(
                   child: Padding(
@@ -176,11 +193,10 @@ class _EquipoScreenState extends State<EquipoScreen> {
                         ListTile(
                           leading: const Icon(Icons.email, color: Colors.green),
                           title: const Text('Email'),
-                          subtitle: Text(persona['email'] ?? 'No disponible'),
-                          onTap: persona['email'] != null
+                          subtitle: Text(persona['email']?.toString() ?? 'No disponible'),
+                          onTap: persona['email'] != null && persona['email'].toString().isNotEmpty
                               ? () async {
-                                  final url = Uri.parse(
-                                      'mailto:${persona['email']}');
+                                  final url = Uri.parse('mailto:${persona['email']}');
                                   if (await canLaunchUrl(url)) {
                                     await launchUrl(url);
                                   }
@@ -188,14 +204,12 @@ class _EquipoScreenState extends State<EquipoScreen> {
                               : null,
                         ),
                         ListTile(
-                          leading:
-                              const Icon(Icons.phone, color: Colors.green),
+                          leading: const Icon(Icons.phone, color: Colors.green),
                           title: const Text('Teléfono'),
-                          subtitle: Text(persona['telefono'] ?? 'No disponible'),
-                          onTap: persona['telefono'] != null
+                          subtitle: Text(persona['telefono']?.toString() ?? 'No disponible'),
+                          onTap: persona['telefono'] != null && persona['telefono'].toString().isNotEmpty
                               ? () async {
-                                  final url = Uri.parse(
-                                      'tel:${persona['telefono']}');
+                                  final url = Uri.parse('tel:${persona['telefono']}');
                                   if (await canLaunchUrl(url)) {
                                     await launchUrl(url);
                                   }
@@ -206,9 +220,11 @@ class _EquipoScreenState extends State<EquipoScreen> {
                     ),
                   ),
                 ),
+                
                 const SizedBox(height: 20),
+                
                 // Biografía
-                if (persona['biografia'] != null)
+                if (persona['biografia'] != null && persona['biografia'].toString().isNotEmpty)
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -221,7 +237,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        persona['biografia'],
+                        persona['biografia'].toString(),
                         style: const TextStyle(
                           fontSize: 16,
                           height: 1.5,
@@ -229,9 +245,11 @@ class _EquipoScreenState extends State<EquipoScreen> {
                       ),
                     ],
                   ),
+                
                 const SizedBox(height: 20),
+                
                 // Redes sociales
-                if (persona['redes_sociales'] != null)
+                if (persona['redes_sociales'] != null && persona['redes_sociales'] is Map)
                   Column(
                     children: [
                       const Text(
@@ -245,40 +263,22 @@ class _EquipoScreenState extends State<EquipoScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (persona['redes_sociales']['twitter'] != null)
+                          if ((persona['redes_sociales'] as Map)['linkedin'] != null)
                             IconButton(
                               onPressed: () async {
-                                final url = Uri.parse(
-                                    'https://twitter.com/${persona['redes_sociales']['twitter']}');
+                                final linkedin = (persona['redes_sociales'] as Map)['linkedin'].toString();
+                                final url = Uri.parse('https://linkedin.com/in/$linkedin');
                                 if (await canLaunchUrl(url)) {
                                   await launchUrl(url);
                                 }
                               },
-                              icon: Image.asset(
-                                'assets/icons/twitter.png',
-                                width: 30,
-                                height: 30,
-                              ),
-                            ),
-                          if (persona['redes_sociales']['linkedin'] != null)
-                            IconButton(
-                              onPressed: () async {
-                                final url = Uri.parse(
-                                    'https://linkedin.com/in/${persona['redes_sociales']['linkedin']}');
-                                if (await canLaunchUrl(url)) {
-                                  await launchUrl(url);
-                                }
-                              },
-                              icon: Image.asset(
-                                'assets/icons/linkedin.png',
-                                width: 30,
-                                height: 30,
-                              ),
+                              icon: const Icon(Icons.linked_camera, size: 30, color: Colors.blue),
                             ),
                         ],
                       ),
                     ],
                   ),
+                
                 const SizedBox(height: 30),
               ],
             ),
@@ -296,7 +296,8 @@ class _EquipoScreenState extends State<EquipoScreen> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           child: const CircleAvatar(
-            backgroundImage: AssetImage('assets/avatars/estudiante2.jpg'),
+            backgroundColor: Colors.green,
+            child: Icon(Icons.people, color: Colors.white),
           ),
         ),
       ),
@@ -313,6 +314,8 @@ class _EquipoScreenState extends State<EquipoScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 prefixIcon: const Icon(Icons.filter_list),
+                filled: true,
+                fillColor: Colors.grey[50],
               ),
               items: departamentos.map((String depto) {
                 return DropdownMenuItem<String>(
@@ -327,6 +330,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
               },
             ),
           ),
+          
           // Estadísticas
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -336,33 +340,32 @@ class _EquipoScreenState extends State<EquipoScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStatCard(
-                      'Total Miembros',
-                      '${equipo.length}',
-                      Icons.people,
-                    ),
-                    _buildStatCard(
-                      'Departamentos',
-                      '${departamentos.length - 1}',
-                      Icons.business,
-                    ),
-                    _buildStatCard(
-                      'Dirección',
-                      '2',
-                      Icons.leaderboard,
-                    ),
+                    _buildStatCard('Total Miembros', '${equipo.length}', Icons.people),
+                    _buildStatCard('Departamentos', '${departamentos.length - 1}', Icons.business),
+                    _buildStatCard('Dirección', '2', Icons.leaderboard),
                   ],
                 ),
               ),
             ),
           ),
+          
           // Lista del equipo
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : filteredEquipo.isEmpty
                     ? const Center(
-                        child: Text('No hay miembros en este departamento'),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.people_outline, size: 60, color: Colors.grey),
+                            SizedBox(height: 16),
+                            Text(
+                              'No hay miembros en este departamento',
+                              style: TextStyle(fontSize: 18, color: Colors.grey),
+                            ),
+                          ],
+                        ),
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(16),
@@ -376,36 +379,30 @@ class _EquipoScreenState extends State<EquipoScreen> {
                               contentPadding: const EdgeInsets.all(12),
                               leading: CircleAvatar(
                                 radius: 30,
-                                backgroundImage: CachedNetworkImageProvider(
-                                  persona['foto'] ?? '',
-                                ),
-                                backgroundColor: Colors.grey[200],
-                                child: persona['foto'] == null
-                                    ? const Icon(Icons.person,
-                                        size: 30, color: Colors.grey)
+                                backgroundColor: Colors.green.shade100,
+                                backgroundImage: persona['foto'] != null && persona['foto'].toString().isNotEmpty
+                                    ? NetworkImage(persona['foto'].toString())
+                                    : null,
+                                child: persona['foto'] == null || persona['foto'].toString().isEmpty
+                                    ? const Icon(Icons.person, size: 30, color: Colors.green)
                                     : null,
                               ),
                               title: Text(
-                                persona['nombre'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                persona['nombre']?.toString() ?? 'Sin nombre',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 4),
-                                  Text(persona['cargo']),
+                                  Text(persona['cargo']?.toString() ?? 'Sin cargo'),
                                   Text(
-                                    persona['departamento'],
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
+                                    persona['departamento']?.toString() ?? 'Sin departamento',
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                                   ),
                                 ],
                               ),
-                              trailing: const Icon(Icons.arrow_forward_ios),
+                              trailing: const Icon(Icons.arrow_forward_ios, color: Colors.green),
                               onTap: () => _mostrarDetallePersona(persona),
                             ),
                           );
@@ -415,11 +412,9 @@ class _EquipoScreenState extends State<EquipoScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _mostrarOrganigrama();
-        },
+        onPressed: _mostrarOrganigrama,
         backgroundColor: Colors.green,
-        child: const Icon(Icons.account_tree),
+        child: const Icon(Icons.account_tree, color: Colors.white),
       ),
     );
   }
@@ -463,6 +458,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
                   Colors.green,
                 ),
                 const SizedBox(height: 20),
+                
                 // Nivel 2: Viceministros
                 const Text(
                   'Viceministros:',
@@ -482,6 +478,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
                   nivel: 2,
                 ),
                 const SizedBox(height: 20),
+                
                 // Nivel 3: Directores
                 const Text(
                   'Directores de Departamento:',
@@ -489,7 +486,7 @@ class _EquipoScreenState extends State<EquipoScreen> {
                 ),
                 const SizedBox(height: 10),
                 ...List.generate(
-                  5,
+                  3,
                   (index) => _buildOrganigramaNivel(
                     'Director ${index + 1}',
                     'Nombre Director',

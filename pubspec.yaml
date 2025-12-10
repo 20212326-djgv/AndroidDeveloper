@@ -40,17 +40,16 @@ flutter:
     - assets/images/
     - assets/videos/
     - assets/icons/
-    - assets/avatars/
-    - assets/logo_app.jpg
+    # - assets/logo_app.png
   
-  fonts:
-    - family: Roboto
-      fonts:
-        - asset: assets/fonts/Roboto-Regular.ttf
-        - asset: assets/fonts/Roboto-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Roboto-Medium.ttf
-          weight: 500
+  # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: assets/fonts/Roboto-Regular.ttf
+  #       - asset: assets/fonts/Roboto-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Roboto-Medium.ttf
+  #         weight: 500
 
   # Configuración para Google Maps
   plugin:

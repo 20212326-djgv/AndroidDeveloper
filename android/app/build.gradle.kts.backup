@@ -1,0 +1,129 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Configurar propiedades
+val localProperties = java.util.Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.reader().use { localProperties.load(it) }
+}
+
+val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toIntOrNull() ?: 1
+val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0.0"
+
+android {
+    namespace = "com.medioambiente.rd"
+    compileSdk = 34
+    
+    // Versión NDK para Flutter
+    ndkVersion = "25.1.8937393"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+    defaultConfig {
+        applicationId = "com.medioambiente.rd"
+        minSdk = flutter.minSdkVersion
+        targetSdk = 34
+        versionCode = flutterVersionCode
+        versionName = flutterVersionName
+        
+        // MultiDex para apps grandes
+        multiDexEnabled = true
+        
+        vectorDrawables {
+            useSupportLibrary = true
+        }
+    }
+
+    signingConfigs {
+        create("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
+    buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = true
+        }
+        
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("debug") // Cambiar por release en producción
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            isCrunchPngs = true
+        }
+    }
+    
+    // Variantes de build
+    flavorDimensions += "default"
+    productFlavors {
+        create("development") {
+            dimension = "default"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+        }
+        create("production") {
+            dimension = "default"
+        }
+    }
+    
+    // Opciones de packaging para evitar conflictos
+    packaging {
+        resources {
+            pickFirsts += setOf(
+                "lib/x86/libc++_shared.so",
+                "lib/x86_64/libc++_shared.so",
+                "lib/armeabi-v7a/libc++_shared.so",
+                "lib/arm64-v8a/libc++_shared.so",
+                "META-INF/DEPENDENCIES",
+                "META-INF/LICENSE",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE",
+                "META-INF/NOTICE.txt",
+                "META-INF/INDEX.LIST"
+            )
+        }
+    }
+    
+    // Para builds más rápidos
+    buildFeatures {
+        buildConfig = true
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+// Dependencias necesarias
+dependencies {
+    implementation("androidx.multidex:multidex:2.0.1")
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
+    
+    // Para Google Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    
+    // Para notificaciones
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+}

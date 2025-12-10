@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Para Google Maps (necesitarás tu propia API Key) -->
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">
+        AIzaSyDummyKeyReplaceWithYourOwn1234567890
+    </string>
+    
+    <!-- Nombre de la app -->
+    <string name="app_name">Medio Ambiente RD</string>
+</resources>

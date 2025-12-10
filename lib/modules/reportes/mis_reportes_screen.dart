@@ -512,7 +512,7 @@ class _MisReportesScreenState extends State<MisReportesScreen> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           child: const CircleAvatar(
-            backgroundImage: AssetImage('assets/avatars/estudiante6.jpg'),
+            backgroundImage: AssetImage('assets/images/profile.jpg'),
           ),
         ),
         actions: [

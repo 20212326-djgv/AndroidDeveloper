@@ -72,34 +72,40 @@ class AcercaDeScreen extends StatelessWidget {
             
             // Miembros del equipo (ajusta estos datos con tu equipo real)
             _buildTeamMember(
-              'Juan Pérez',
-              '2021-1234',
-              '809-123-4567',
-              '@juanperez',
-              'assets/avatars/estudiante1.jpg',
+              'David Josue Guzman Vizcaino',
+              '2021-2326',
+              '809-369-5519',
+              '@dj',
+              'assets/images/David.png',
               'Líder del Proyecto',
             ),
             
             _buildTeamMember(
-              'María García',
-              '2021-5678',
+              'Gean Carlos Valera',
+              '2022-1918',
               '809-987-6543',
-              '@mariagarcia',
-              'assets/avatars/estudiante2.jpg',
-              'Desarrolladora Frontend',
+              '@gcv',
+              'assets/images/Gean.jpg',
+              'Desarrollador Frontend',
             ),
             
             _buildTeamMember(
-              'Carlos Rodríguez',
-              '2021-9012',
+              'Yendry Mejía',
+              '2022-0657',
               '829-555-1234',
-              '@carlosrod',
-              'assets/avatars/estudiante3.jpg',
+              '@ym',
+              'assets/images/profile.jpg',
               'Desarrollador Backend',
             ),
-            
-            // Agrega más miembros según tu equipo...
-            
+            _buildTeamMember(
+              'Ismael Abad',
+              '----*----',
+              '829-555-1234',
+              '@ia',
+              'assets/images/profile.jpg',
+              'Multimedia',
+            ),
+
             const SizedBox(height: 30),
             
             // Información de la institución
@@ -113,7 +119,7 @@ class AcercaDeScreen extends StatelessWidget {
             ),
             
             const Text(
-              'Tercer Trimestre 2025',
+              'Tercer Cuatrimestre (C3) 2025',
               style: TextStyle(color: Colors.grey),
             ),
             
@@ -139,9 +145,9 @@ class AcercaDeScreen extends StatelessWidget {
                     ListTile(
                       leading: const Icon(Icons.email, color: Colors.green),
                       title: const Text('Email del equipo'),
-                      subtitle: const Text('equipo@itla.edu.do'),
+                      subtitle: const Text('equipoflutter@itla.edu.do'),
                       onTap: () async {
-                        final url = Uri.parse('mailto:equipo@itla.edu.do');
+                        final url = Uri.parse('mailto:equipoflutter@itla.edu.do');
                         if (await canLaunchUrl(url)) {
                           await launchUrl(url);
                         }
@@ -152,9 +158,9 @@ class AcercaDeScreen extends StatelessWidget {
                     ListTile(
                       leading: const Icon(Icons.code, color: Colors.green),
                       title: const Text('Repositorio GitHub'),
-                      subtitle: const Text('github.com/tu-usuario/medioambiente-rd'),
+                      subtitle: const Text('https://github.com/20212326-djgv/AndroidDeveloper'),
                       onTap: () async {
-                        final url = Uri.parse('https://github.com');
+                        final url = Uri.parse('https://github.com/20212326-djgv/AndroidDeveloper');
                         if (await canLaunchUrl(url)) {
                           await launchUrl(url);
                         }

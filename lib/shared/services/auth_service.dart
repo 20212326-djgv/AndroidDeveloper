@@ -11,6 +11,45 @@ class AuthService extends ChangeNotifier {
   bool get isLoggedIn => _isLoggedIn;
   Map<String, dynamic>? get currentUser => _currentUser;
 
+  // Usuarios de prueba para desarrollo/demo
+  final Map<String, Map<String, dynamic>> _usuariosPrueba = {
+    'admin@medioambiente.gob.do': {
+      'password': 'Admin123',
+      'nombre': 'Administrador',
+      'rol': 'Administrador',
+      'cedula': '00100000001',
+      'telefono': '8090000001',
+    },
+    'voluntario@itla.edu.do': {
+      'password': 'Voluntario2025',
+      'nombre': 'Juan Pérez',
+      'rol': 'Voluntario',
+      'cedula': '00200000002',
+      'telefono': '8090000002',
+    },
+    'usuario@test.com': {
+      'password': 'Test123',
+      'nombre': 'Usuario de Prueba',
+      'rol': 'Usuario',
+      'cedula': '00300000003',
+      'telefono': '8090000003',
+    },
+    'demo@medioambiente.gob.do': {
+      'password': 'Demo2025',
+      'nombre': 'Usuario Demo',
+      'rol': 'Demo',
+      'cedula': '00400000004',
+      'telefono': '8090000004',
+    },
+    'test@test.com': {
+      'password': '123456',
+      'nombre': 'Test User',
+      'rol': 'Test',
+      'cedula': '00500000005',
+      'telefono': '8090000005',
+    },
+  };
+
   // Database helper
   Database? _database;
 
@@ -75,37 +114,36 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // Login
+  // Login - Versión mejorada con usuarios de prueba
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      // Simular llamada a API
-      await Future.delayed(const Duration(seconds: 1));
+      // Simular delay de red
+      await Future.delayed(const Duration(milliseconds: 800));
       
-      // En un caso real, aquí llamarías a tu API
-      // Por ahora, simulamos un login exitoso si las credenciales no están vacías
-      if (email.isNotEmpty && password.isNotEmpty) {
-        final db = await database;
+      // OPCIÓN 1: Verificar si es usuario de prueba
+      if (_usuariosPrueba.containsKey(email)) {
+        final usuarioPrueba = _usuariosPrueba[email]!;
         
-        // Buscar usuario en la base de datos
-        final usuarios = await db.query(
-          'usuarios',
-          where: 'email = ? AND password = ?',
-          whereArgs: [email, password],
-        );
-        
-        if (usuarios.isEmpty) {
-          // Usuario no encontrado, crear uno de ejemplo
-          final token = 'token_${DateTime.now().millisecondsSinceEpoch}';
+        if (usuarioPrueba['password'] == password) {
+          // Login exitoso con usuario de prueba
+          final token = 'token_prueba_${DateTime.now().millisecondsSinceEpoch}';
           
-          await db.insert('usuarios', {
-            'email': email,
-            'nombre': 'Usuario de Prueba',
-            'cedula': '00000000000',
-            'telefono': '0000000000',
-            'password': password,
-            'token': token,
-            'fecha_registro': DateTime.now().toIso8601String(),
-          });
+          final db = await database;
+          
+          // Insertar o actualizar usuario en la base de datos
+          await db.insert(
+            'usuarios',
+            {
+              'email': email,
+              'nombre': usuarioPrueba['nombre'],
+              'cedula': usuarioPrueba['cedula'],
+              'telefono': usuarioPrueba['telefono'],
+              'password': password,
+              'token': token,
+              'fecha_registro': DateTime.now().toIso8601String(),
+            },
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
           
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('token', token);
@@ -113,7 +151,10 @@ class AuthService extends ChangeNotifier {
           _isLoggedIn = true;
           _currentUser = {
             'email': email,
-            'nombre': 'Usuario de Prueba',
+            'nombre': usuarioPrueba['nombre'],
+            'rol': usuarioPrueba['rol'],
+            'cedula': usuarioPrueba['cedula'],
+            'telefono': usuarioPrueba['telefono'],
             'token': token,
           };
           
@@ -125,38 +166,94 @@ class AuthService extends ChangeNotifier {
             'token': token,
           };
         } else {
-          // Usuario encontrado
-          final usuario = usuarios.first;
-          final token = 'token_${DateTime.now().millisecondsSinceEpoch}';
-          
-          // Actualizar token
-          await db.update(
-            'usuarios',
-            {'token': token},
-            where: 'id = ?',
-            whereArgs: [usuario['id']],
-          );
-          
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('token', token);
-          
-          _isLoggedIn = true;
-          _currentUser = usuario..['token'] = token;
-          
-          notifyListeners();
-          
           return {
-            'exito': true,
-            'mensaje': 'Login exitoso',
-            'token': token,
+            'exito': false,
+            'mensaje': 'Contraseña incorrecta',
           };
         }
       }
       
+      // OPCIÓN 2: Buscar en base de datos existente
+      final db = await database;
+      final usuarios = await db.query(
+        'usuarios',
+        where: 'email = ? AND password = ?',
+        whereArgs: [email, password],
+      );
+      
+      if (usuarios.isNotEmpty) {
+        // Usuario encontrado en base de datos
+        final usuario = usuarios.first;
+        final token = 'token_${DateTime.now().millisecondsSinceEpoch}';
+        
+        // Actualizar token
+        await db.update(
+          'usuarios',
+          {'token': token},
+          where: 'id = ?',
+          whereArgs: [usuario['id']],
+        );
+        
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        
+        _isLoggedIn = true;
+        _currentUser = usuario..['token'] = token;
+        
+        notifyListeners();
+        
+        return {
+          'exito': true,
+          'mensaje': 'Login exitoso',
+          'token': token,
+        };
+      }
+      
+      // OPCIÓN 3: Aceptar cualquier email válido (modo demo)
+      if (email.contains('@') && password.length >= 6) {
+        final token = 'token_demo_${DateTime.now().millisecondsSinceEpoch}';
+        
+        final db = await database;
+        
+        await db.insert(
+          'usuarios',
+          {
+            'email': email,
+            'nombre': 'Usuario Demo',
+            'cedula': '00000000000',
+            'telefono': '0000000000',
+            'password': password,
+            'token': token,
+            'fecha_registro': DateTime.now().toIso8601String(),
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+        
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        
+        _isLoggedIn = true;
+        _currentUser = {
+          'email': email,
+          'nombre': 'Usuario Demo',
+          'rol': 'Usuario',
+          'token': token,
+        };
+        
+        notifyListeners();
+        
+        return {
+          'exito': true,
+          'mensaje': 'Login exitoso (modo demo)',
+          'token': token,
+        };
+      }
+      
       return {
         'exito': false,
-        'mensaje': 'Credenciales inválidas',
+        'mensaje': 'Credenciales inválidas. Use: demo@medioambiente.gob.do / Demo2025',
       };
+      
     } catch (e) {
       return {
         'exito': false,
@@ -233,7 +330,7 @@ class AuthService extends ChangeNotifier {
       
       return {
         'exito': true,
-        'mensaje': 'Registro exitoso',
+        'mensaje': 'Registro exitoso como voluntario',
         'token': token,
       };
     } catch (e) {
@@ -317,6 +414,21 @@ class AuthService extends ChangeNotifier {
       // Simular envío de email
       await Future.delayed(const Duration(seconds: 1));
       
+      // Verificar si el email existe
+      final db = await database;
+      final usuarios = await db.query(
+        'usuarios',
+        where: 'email = ?',
+        whereArgs: [email],
+      );
+      
+      if (usuarios.isEmpty && !_usuariosPrueba.containsKey(email)) {
+        return {
+          'exito': false,
+          'mensaje': 'Email no registrado',
+        };
+      }
+      
       return {
         'exito': true,
         'mensaje': 'Se ha enviado un correo para recuperar la contraseña',
@@ -326,6 +438,41 @@ class AuthService extends ChangeNotifier {
         'exito': false,
         'mensaje': 'Error al recuperar contraseña: $e',
       };
+    }
+  }
+
+  // Método para obtener credenciales de demo (útil para presentaciones)
+  Map<String, String> getCredencialesDemo() {
+    return {
+      'Administrador': 'admin@medioambiente.gob.do / Admin123',
+      'Voluntario': 'voluntario@itla.edu.do / Voluntario2025',
+      'Demo': 'demo@medioambiente.gob.do / Demo2025',
+      'Test Simple': 'test@test.com / 123456',
+      'Usuario Genérico': 'cualquier@email.com / cualquier123',
+    };
+  }
+
+  // Método para limpiar datos de prueba (solo desarrollo)
+  Future<void> limpiarDatosPrueba() async {
+    try {
+      final db = await database;
+      await db.delete('usuarios');
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('token');
+      
+      _isLoggedIn = false;
+      _currentUser = null;
+      
+      notifyListeners();
+      
+      if (kDebugMode) {
+        print('Datos de prueba limpiados');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error limpiando datos: $e');
+      }
     }
   }
 }
